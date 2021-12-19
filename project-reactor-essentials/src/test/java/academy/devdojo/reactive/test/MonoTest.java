@@ -140,8 +140,7 @@ public class MonoTest {
 				.doOnNext(s -> log.info("Value is here. Executing doOnNext {}", s))
 				.flatMap(s -> Mono.empty())
 				.doOnNext(s -> log.info("Value is here. Executing doOnNext {}", s))
-				.doOnSuccess(s -> log.info("doOnSuccess executed {}", s))
-				;
+				.doOnSuccess(s -> log.info("doOnSuccess executed {}", s));
 
 		// SUBSCRIBER
 		mono.subscribe((s) -> {
@@ -155,6 +154,57 @@ public class MonoTest {
 //		StepVerifier.create(mono) //
 //				.expectNext(name.toUpperCase()) //
 //				.verifyComplete();
+	}
+
+	@Test
+	public void monoDoOnError() {
+		Mono<Object> error = Mono.error(new IllegalArgumentException("Message error")) //
+				.doOnError(e -> MonoTest.log.error("Error message: {}", e.getMessage())) //
+				.doOnNext(s -> log.info(
+						"executing this doOnNext")) // doOnNext nao eh executado pois quando um erro eh disparado o publisher fecha
+				.log() //
+				;
+
+		StepVerifier.create(error) //
+				.expectError(IllegalArgumentException.class) //
+				.verify();
+	}
+
+	@Test
+	public void monoDoOnErrorResume() {
+		String name = "Daniel Souza";
+
+		Mono<Object> error = Mono.error(new IllegalArgumentException("Message error")) //
+				.doOnError(e -> MonoTest.log.error("Error message: {}", e.getMessage())) //
+				.onErrorResume(s -> {
+					log.info("executing this doOnNext");
+					return Mono.just(name);
+				})
+				.log() //
+				;
+
+		StepVerifier.create(error) //
+				.expectNext(name)
+				.verifyComplete();
+	}
+
+	@Test
+	public void monoDoOnErrorReturn() {
+		String name = "Daniel Souza";
+
+		Mono<Object> error = Mono.error(new IllegalArgumentException("Message error")) //
+				.onErrorReturn("EMPTY")
+				.doOnError(e -> MonoTest.log.error("Error message: {}", e.getMessage())) //
+				.onErrorResume(s -> {
+					log.info("executing this doOnNext");
+					return Mono.just(name);
+				})
+				.log() //
+				;
+
+		StepVerifier.create(error) //
+				.expectNext("EMPTY")
+				.verifyComplete();
 	}
 
 }
