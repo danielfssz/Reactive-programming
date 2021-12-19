@@ -1,7 +1,6 @@
 package academy.devdojo.reactive.test;
 
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.Subscription;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -119,13 +118,43 @@ public class MonoTest {
 				},
 				Throwable::printStackTrace, //
 				() -> log.info("Finalizado"), //
-				Subscription::cancel);
+				subscription -> subscription.request(5));
 
 		log.info("-------------\n");
 
 		StepVerifier.create(mono) //
 				.expectNext(name.toUpperCase()) //
 				.verifyComplete();
+	}
+
+	@Test
+	public void monoDoOnMethods() {
+		String name = "Daniel Souza";
+
+		// PUBLISHER
+		Mono<Object> mono = Mono.just(name) //
+				.log() //
+				.map(String::toUpperCase) //
+				.doOnSubscribe(subscription -> log.info("subscribed")) //
+				.doOnRequest(longNumber -> log.info("Request received, starting doing something...")) //
+				.doOnNext(s -> log.info("Value is here. Executing doOnNext {}", s))
+				.flatMap(s -> Mono.empty())
+				.doOnNext(s -> log.info("Value is here. Executing doOnNext {}", s))
+				.doOnSuccess(s -> log.info("doOnSuccess executed {}", s))
+				;
+
+		// SUBSCRIBER
+		mono.subscribe((s) -> {
+					log.info("Valor {}", s);
+				},
+				Throwable::printStackTrace, //
+				() -> log.info("Finalizado"));
+
+		log.info("-------------\n");
+
+//		StepVerifier.create(mono) //
+//				.expectNext(name.toUpperCase()) //
+//				.verifyComplete();
 	}
 
 }
