@@ -1,6 +1,7 @@
 package academy.devdojo.reactive.test;
 
 import org.junit.jupiter.api.Test;
+import org.reactivestreams.Subscription;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
@@ -85,4 +86,46 @@ public class MonoTest {
 				.expectError(RuntimeException.class)
 				.verify();
 	}
+
+	@Test
+	public void monoSubscriberConsumerComplete() {
+		String name = "Daniel Souza";
+		Mono<String> mono = Mono.just(name) //
+				.log() //
+				.map(String::toUpperCase);
+
+		mono.subscribe((s) -> {
+					log.info("Valor {}", s);
+				},
+				Throwable::printStackTrace, //
+				() -> log.info("Finalizado"));
+
+		log.info("-------------\n");
+
+		StepVerifier.create(mono) //
+				.expectNext(name.toUpperCase()) //
+				.verifyComplete();
+	}
+
+	@Test
+	public void monoSubscriberConsumerSubscription() {
+		String name = "Daniel Souza";
+		Mono<String> mono = Mono.just(name) //
+				.log() //
+				.map(String::toUpperCase);
+
+		mono.subscribe((s) -> {
+					log.info("Valor {}", s);
+				},
+				Throwable::printStackTrace, //
+				() -> log.info("Finalizado"), //
+				Subscription::cancel);
+
+		log.info("-------------\n");
+
+		StepVerifier.create(mono) //
+				.expectNext(name.toUpperCase()) //
+				.verifyComplete();
+	}
+
 }
