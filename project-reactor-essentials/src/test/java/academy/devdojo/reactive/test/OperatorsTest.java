@@ -2,6 +2,7 @@ package academy.devdojo.reactive.test;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -253,7 +254,44 @@ public class OperatorsTest {
 				.expectNext("BC", "BD")
 				.expectComplete()
 				.verify();
+	}
 
+	@Test
+	public void mergeOperator() {
+		Flux<String> flux1 = Flux.just("a", "b").delayElements(Duration.ofMillis(200));
+		Flux<String> flux2 = Flux.just("c", "d");
+
+		Flux<String> merge = Flux.merge(flux1, flux2)
+				.log();
+
+		merge.subscribe(log::info);
+
+		StepVerifier
+				.create(merge)
+				.expectSubscription()
+				.expectNext("a", "b", "c", "d")
+				.expectComplete()
+				.verify()
+		;
+	}
+
+	@Test
+	public void mergeWithOperator() {
+		Flux<String> flux1 = Flux.just("a", "b").delayElements(Duration.ofMillis(200));
+		Flux<String> flux2 = Flux.just("c", "d");
+
+		Flux<String> merge = flux1.mergeWith(flux2)
+				.log();
+
+		merge.subscribe(log::info);
+
+		StepVerifier
+				.create(merge)
+				.expectSubscription()
+				.expectNext("a", "b", "c", "d")
+				.expectComplete()
+				.verify()
+		;
 	}
 
 }
