@@ -1,9 +1,15 @@
 package academy.devdojo.reactive.test;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.List;
+
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
@@ -138,6 +144,27 @@ public class OperatorsTest {
 				.expectNext(1, 2, 3, 4)
 				.verifyComplete()
 		;
+	}
+
+	@Test
+	public void subscribeOn() throws Exception {
+		// executa a chamada que esta bloqueando a thread em backgroud
+		Mono<List<String>> list = Mono.fromCallable(() -> Files.readAllLines(Paths.get("text-file")))
+				.log()
+				.subscribeOn(Schedulers.boundedElastic());
+
+		list.subscribe(i -> log.info("{}", i));
+
+		Thread.sleep(200);
+
+		StepVerifier.create(list)
+				.expectSubscription()
+				.thenConsumeWhile(l -> {
+					Assertions.assertFalse(l.isEmpty());
+					log.info("Size {}", l.size());
+					return true;
+				})
+				.verifyComplete();
 	}
 
 }
