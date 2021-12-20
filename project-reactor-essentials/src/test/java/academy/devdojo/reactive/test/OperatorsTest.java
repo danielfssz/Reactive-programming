@@ -147,7 +147,7 @@ public class OperatorsTest {
 	}
 
 	@Test
-	public void subscribeOn() throws Exception {
+	public void subscribeOnIO() throws Exception {
 		// executa a chamada que esta bloqueando a thread em backgroud
 		Mono<List<String>> list = Mono.fromCallable(() -> Files.readAllLines(Paths.get("text-file")))
 				.log()
