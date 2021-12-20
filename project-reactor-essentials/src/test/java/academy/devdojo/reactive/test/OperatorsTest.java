@@ -3,6 +3,7 @@ package academy.devdojo.reactive.test;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -165,6 +166,46 @@ public class OperatorsTest {
 					return true;
 				})
 				.verifyComplete();
+	}
+
+	@Test
+	public void switchIfEmptyOperator() {
+		Flux<Object> flux = emptyFlux()
+				.switchIfEmpty(Flux.just("not empty anymore"))
+				.log();
+
+		StepVerifier.create(flux)
+				.expectSubscription()
+				.expectNext("not empty anymore")
+				.expectComplete()
+				.verify();
+	}
+
+	private Flux<Object> emptyFlux() {
+		return Flux.empty();
+	}
+
+	@Test
+	public void deferOperator() throws Exception { //adia a execucao do que vc tem dentro do operador
+		Mono<Long> just = Mono.just(System.currentTimeMillis());
+		Mono<Long> defer = Mono.defer(() -> Mono.just(System.currentTimeMillis()));
+
+		just.subscribe(l -> log.info("just time {}", l));
+		Thread.sleep(100);
+		just.subscribe(l -> log.info("just time {}", l));
+		Thread.sleep(100);
+		just.subscribe(l -> log.info("just time {}", l));
+
+		defer.subscribe(l -> log.info("defer time {}", l));
+		Thread.sleep(100);
+		defer.subscribe(l -> log.info("defer time {}", l));
+		Thread.sleep(100);
+		defer.subscribe(l -> log.info("defer time {}", l));
+
+		AtomicLong atomicLong = new AtomicLong();
+		defer.subscribe(atomicLong::set);
+		Assertions.assertTrue(atomicLong.get() > 0);
+
 	}
 
 }
