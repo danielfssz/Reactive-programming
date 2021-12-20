@@ -233,4 +233,20 @@ public class FluxTest {
 		;
 	}
 
+	@Test
+	public void connectableFluxAutoConnect() throws Exception {
+		Flux<Integer> fluxAuto = Flux.range(1, 5)
+				.log()
+				.delayElements(Duration.ofMillis(100))
+				.publish()
+				.autoConnect(2);
+
+		StepVerifier.create(fluxAuto)
+				.then(fluxAuto::subscribe)
+				.expectNext(1, 2, 3, 4, 5)
+				.expectComplete()
+				.verify();
+		;
+	}
+
 }
