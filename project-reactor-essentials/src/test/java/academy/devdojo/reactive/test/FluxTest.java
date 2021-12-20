@@ -1,5 +1,6 @@
 package academy.devdojo.reactive.test;
 
+import java.time.Duration;
 import java.util.Arrays;
 
 import org.junit.jupiter.api.Test;
@@ -155,6 +156,37 @@ public class FluxTest {
 				.expectNext(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
 				.verifyComplete()
 		;
+	}
+
+	@Test
+	public void fluxSubscribeIntervalOne() throws Exception {
+		Flux<Long> interval = Flux.interval(Duration.ofMillis(100))
+				.take(10)
+				.log();
+
+		interval.subscribe(i -> log.info("Number {}", i));
+
+		Thread.sleep(3000);
+	}
+
+	@Test
+	public void fluxSubscribeIntervalTwo() throws Exception {
+		StepVerifier.withVirtualTime(this::createInterval)
+				.expectSubscription()
+				.expectNoEvent(Duration.ofDays(1))
+				.thenAwait(Duration.ofDays(1))
+				.expectNext(0L)
+				.thenAwait(Duration.ofDays(1))
+				.expectNext(1L)
+				.thenCancel()
+				.verify()
+		;
+	}
+
+	private Flux<Long> createInterval() {
+		return Flux.interval(Duration.ofDays(1))
+				.take(10)
+				.log();
 	}
 
 }
