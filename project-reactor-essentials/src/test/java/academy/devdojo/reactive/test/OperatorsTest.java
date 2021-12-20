@@ -47,11 +47,11 @@ public class OperatorsTest {
 		flux.subscribe();
 		flux.subscribe();
 
-//		StepVerifier.create(flux)
-//				.expectSubscription()
-//				.expectNext(1, 2, 3, 4)
-//				.verifyComplete()
-//		;
+		StepVerifier.create(flux)
+				.expectSubscription()
+				.expectNext(1, 2, 3, 4)
+				.verifyComplete()
+		;
 	}
 
 }
