@@ -9,6 +9,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -405,6 +409,48 @@ public class OperatorsTest {
 				.expectNext("nomeA1", "nomeA2", "nomeB1", "nomeB2")
 				.verifyComplete()
 		;
+	}
+
+	@Test
+	public void zipOperator() {
+		Flux<String> titleFlux = Flux.just("La Casa de Papel", "Chicago PD");
+		Flux<Integer> episodesFlux = Flux.just(40, 300);
+
+		Flux<Serie> serieFlux = Flux
+				.zip(titleFlux, episodesFlux)
+				.flatMap(tuple -> Flux.just(new Serie(tuple.getT1(), tuple.getT2())));
+
+//		serieFlux.subscribe(serie -> log.info(serie.toString()));
+
+		StepVerifier
+				.create(serieFlux)
+				.expectSubscription()
+				.expectNext(new Serie("La Casa de Papel", 40), new Serie("Chicago PD", 300))
+				.verifyComplete();
+	}
+
+	@Test
+	public void zipWithOperator() {
+		Flux<String> titleFlux = Flux.just("La Casa de Papel", "Chicago PD");
+		Flux<Integer> episodesFlux = Flux.just(40, 300);
+
+		Flux<Serie> serieFlux = titleFlux.zipWith(episodesFlux)
+				.flatMap(tuple -> Flux.just(new Serie(tuple.getT1(), tuple.getT2())));
+
+		StepVerifier
+				.create(serieFlux)
+				.expectSubscription()
+				.expectNext(new Serie("La Casa de Papel", 40), new Serie("Chicago PD", 300))
+				.verifyComplete();
+	}
+
+	@AllArgsConstructor
+	@Getter
+	@ToString
+	@EqualsAndHashCode
+	class Serie {
+		private String title;
+		private int episodes;
 	}
 
 }
